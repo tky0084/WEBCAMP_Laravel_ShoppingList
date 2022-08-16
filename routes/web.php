@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/register', [ShoppingListController::class, 'register']);
             Route::delete('/delete/{shopping_list_id}', [ShoppingListController::class, 'delete'])->whereNumber('shopping_list_id')->name('delete');
             Route::post('/complete/{shopping_list_id}', [ShoppingListController::class, 'complete'])->whereNumber('shopping_list_id')->name('complete');
+
         });
 
 // ログアウト
