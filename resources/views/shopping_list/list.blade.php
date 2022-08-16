@@ -6,8 +6,16 @@
 {{-- メインコンテンツ --}}
 @section('contets')
         <h1>「買うもの」の登録</h1>
-        <form action="./top.html" method="post">
-                「買うもの」名：<input><br>
+         @if ($errors->any())
+                <div>
+                @foreach ($errors->all() as $error)
+                    {{ $error }}<br>
+                @endforeach
+                </div>
+        @endif
+        <form action="/shopping_list/register" method="post">
+                @csrf
+                「買うもの」名：<input name="name"><br>
                 <button>「買うもの」を登録する</button><br>
         </form>
         

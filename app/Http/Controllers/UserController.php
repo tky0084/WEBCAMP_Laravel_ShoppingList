@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRegisterRequest;
 use Illuminate\Http\Request;
@@ -21,9 +22,23 @@ class UserController extends Controller
     
     public function register(UserRegisterRequest $request)
     {
-        // validate済みのデータの取得
+    // データの取得
     $datum = $request->validated();
-    var_dump($datum); exit;
+    //var_dump($datum); exit;
+    
+    // パスワードのハッシュ化
+    $datum['password'] = Hash::make($datum['password']);
+       
+    // テーブルへのINSERT
+    try {
+        User::create($datum);
+    } catch(\Throwable $e) {
+        echo $e->getMessage();
+        exit;
+    }
 
+    $request->session()->flash('front.user_register_success', true);
+
+    return redirect('/');
     }
 }
