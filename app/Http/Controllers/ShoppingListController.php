@@ -2,10 +2,13 @@
 declare(strict_types=1);
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;  // 追加
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ShoppinglistRegisterRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Shopping_list;
+use App\Models\Completed_shopping_list;
+use Illuminate\Support\Facades\DB;
 
 class ShoppingListController extends Controller
 {
@@ -58,6 +61,25 @@ $sql = Shopping_list::where('user_id', Auth::id())
         //
         return redirect('/shopping_list/list');
     }
+
+    /**
+     * 「単一のタスク」Modelの取得
+     */
+    protected function getTaskModel($task_id)
+    {
+        // task_idのレコードを取得する
+        $task = Shopping_list::find($task_id);
+        if ($task === null) {
+            return null;
+        }
+        // 本人以外のタスクならNGとする
+        if ($task->user_id !== Auth::id()) {
+            return null;
+        }
+        //
+        return $task;
+    }
+    
     /**
      * 削除処理
      */
@@ -70,6 +92,52 @@ $sql = Shopping_list::where('user_id', Auth::id())
         if ($task !== null) {
             $task->delete();
             $request->session()->flash('front.task_delete_success', true);
+        }
+
+        // 一覧に遷移する
+        return redirect('/shopping_list/list');
+    }
+    
+    /**
+     * タスクの完了
+     */
+    public function complete(Request $request, $task_id)
+    {
+        /* タスクを完了テーブルに移動させる */
+        try {
+            // トランザクション開始
+            DB::beginTransaction();
+
+            // task_idのレコードを取得する
+            $task = $this->getTaskModel($task_id);
+            if ($task === null) {
+                // task_idが不正なのでトランザクション終了
+                throw new \Exception('');
+            }
+
+            // tasks側を削除する
+            $task->delete();
+//var_dump($task->toArray()); exit;
+
+            // completed_tasks側にinsertする
+            $dask_datum = $task->toArray();
+            $r = Completed_shopping_list::create($dask_datum);
+            if ($r === null) {
+                // insertで失敗したのでトランザクション終了
+                throw new \Exception('');
+            }
+//echo '処理成功'; exit;
+
+            // トランザクション終了
+            DB::commit();
+            // 完了メッセージ出力
+            $request->session()->flash('front.task_completed_success', true);
+        } catch(\Throwable $e) {
+//var_dump($e->getMessage()); exit;
+            // トランザクション異常終了
+            DB::rollBack();
+            // 完了失敗メッセージ出力
+            $request->session()->flash('front.task_completed_failure', true);
         }
 
         // 一覧に遷移する
