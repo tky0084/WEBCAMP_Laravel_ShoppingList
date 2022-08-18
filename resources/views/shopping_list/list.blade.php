@@ -1,7 +1,7 @@
-@extends('layout');
+@extends('layout')
 
 {{-- タイトル --}}
-@section('title')(詳細画面)@endsection
+@section('title')(一覧画面)@endsection
 
 {{-- メインコンテンツ --}}
 @section('contets')
